@@ -1,29 +1,50 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+// Import du module HTTP natif de Node.js
+const http = require('http');
+
+// Import de l'application Express configurée
+const app = require('./app');
+
+// Chargement des variables d'environnement
 require('dotenv').config();
 
-const app = express();
+// Fonction utilitaire pour normaliser le port
+const normalizePort = (val) => {
+  const port = parseInt(val, 10);
+  if (isNaN(port)) return val; 
+  if (port >= 0) return port; 
+  return false;
+};
 
-// Middlewares
-app.use(express.json()); // Pour parser le JSON
-app.use(cors()); // Pour gérer les CORS entre frontend et backend
+// Définition du port
+const port = normalizePort(process.env.PORT || 4000);
+app.set('port', port);
 
-// Exemple de route de test
-app.get('/', (req, res) => {
-  res.send('Bienvenue sur l’API Mon Vieux Grimoire !');
-});
+// Création du serveur HTTP basé sur l'application Express
+const server = http.createServer(app);
 
-// Connexion à MongoDB (à compléter avec votre URI réelle)
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/grimoire', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('✅ Connexion à MongoDB réussie'))
-  .catch((error) => console.error('❌ Échec de la connexion à MongoDB :', error));
+// Gestionnaire d'erreurs du serveur
+const errorHandler = (error) => {
+  console.trace('Trace errorHandler'); // Pour debug complet
+  if (error.syscall !== 'listen') throw error;
+
+  const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
+
+  switch (error.code) {
+    case 'EACCES':
+      console.error(`${bind} nécessite des privilèges élevés.`);
+      process.exit(1);
+    case 'EADDRINUSE':
+      console.error(`${bind} est déjà utilisé.`);
+      process.exit(1);
+    default:
+      throw error;
+  }
+};
+
+// Gestion des événements serveur
+server.on('error', errorHandler);
 
 // Démarrage du serveur
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
+server.listen(port, () => {
+  console.log(`Serveur démarré sur http://localhost:${port}`);
 });
