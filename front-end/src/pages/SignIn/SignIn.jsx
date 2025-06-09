@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import * as PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { API_ROUTES, APP_ROUTES } from '../../utils/constants';
 import { useUser } from '../../lib/customHooks';
@@ -12,10 +12,9 @@ function SignIn({ setUser }) {
   const navigate = useNavigate();
   const { user, authenticated } = useUser();
 
-  // Redirection sécurisée après authentification
   useEffect(() => {
     if (user || authenticated) {
-      navigate(APP_ROUTES.DASHBOARD); // "/" par défaut
+      navigate(APP_ROUTES.DASHBOARD);
     }
   }, [user, authenticated, navigate]);
 
@@ -38,9 +37,9 @@ function SignIn({ setUser }) {
         navigate('/');
       }
     } catch (err) {
-      console.log(err);
-      setNotification({ error: true, message: err.message });
-      console.log('Some error occured during signing in: ', err);
+      const errorMsg = err.response?.data?.error || 'Erreur lors de la connexion';
+      setNotification({ error: true, message: errorMsg });
+      console.log('Erreur login :', err.response?.data || err);
     } finally {
       setIsLoading(false);
     }
@@ -61,8 +60,9 @@ function SignIn({ setUser }) {
         message: 'Votre compte a bien été créé, vous pouvez vous connecter',
       });
     } catch (err) {
-      setNotification({ error: true, message: err.message });
-      console.log('Some error occured during signing up: ', err);
+      const errorMsg = err.response?.data?.error || 'Erreur lors de l\'inscription';
+      setNotification({ error: true, message: errorMsg });
+      console.log('Erreur signup :', err.response?.data || err);
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +104,9 @@ function SignIn({ setUser }) {
             className="flex justify-center p-2 rounded-md w-1/2 self-center bg-gray-800 text-white hover:bg-gray-800"
             onClick={signIn}
           >
-            {isLoading ? <div /> : null}
+            {isLoading && (
+              <div className="mr-2 w-5 h-5 border-l-2 rounded-full animate-spin" />
+            )}
             <span>Se connecter</span>
           </button>
           <span>OU</span>
@@ -113,8 +115,10 @@ function SignIn({ setUser }) {
             className="flex justify-center p-2 rounded-md w-1/2 self-center bg-gray-800 text-white hover:bg-gray-800"
             onClick={signUp}
           >
-            {isLoading ? <div className="mr-2 w-5 h-5 border-l-2 rounded-full animate-spin" /> : null}
-            <span>S&aposinscrire</span>
+            {isLoading && (
+              <div className="mr-2 w-5 h-5 border-l-2 rounded-full animate-spin" />
+            )}
+            <span>S&apos;inscrire</span>
           </button>
         </div>
       </div>
