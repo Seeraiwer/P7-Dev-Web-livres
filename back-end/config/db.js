@@ -1,26 +1,35 @@
-require('dotenv').config(); // Charge les variables d’environnement depuis .env
+// -----------------------------------------------------------------------------
+// Chargement des variables d’environnement depuis le fichier .env
+// (doit contenir au minimum la variable MONGODB_URI)
+// -----------------------------------------------------------------------------
+require('dotenv').config();
+
 const mongoose = require('mongoose');
 
+// -----------------------------------------------------------------------------
+// Fonction de connexion à MongoDB, à appeler au lancement de l’application
+// -----------------------------------------------------------------------------
 exports.connect = () => {
-const uri = process.env.MONGODB_URI;
+  const uri = process.env.MONGODB_URI; // URI MongoDB définie dans .env (ex : mongodb+srv://...)
 
-  // Vérifie que la variable d’environnement est bien définie
+  // Vérifie que l’URI est bien définie avant de tenter une connexion
   if (!uri) {
     console.error('Variable MONGODB_URI manquante dans .env');
-    process.exit(1); // Arrêt immédiat du processus
+    process.exit(1); // Arrêt immédiat si la config est invalide (évite crash silencieux plus tard)
   }
 
-  // Connexion à MongoDB via Mongoose
+  // Connexion à MongoDB via Mongoose avec options de timeout explicites
   mongoose
     .connect(uri, {
-      connectTimeoutMS: 30000,           // Temps max de tentative de connexion
-      serverSelectionTimeoutMS: 30000,   // Temps max pour trouver un serveur valide
+      connectTimeoutMS: 30000,           // Maximum 30 secondes pour établir une connexion initiale
+      serverSelectionTimeoutMS: 30000,   // Maximum 30 secondes pour détecter un serveur Mongo valide
     })
     .then(() => {
-      console.log('Connexion MongoDB réussie');
+      console.log('Connexion MongoDB réussie'); // Connexion établie avec succès
     })
     .catch((err) => {
+      // Si échec de la connexion : log explicite + arrêt complet
       console.error('Échec de la connexion MongoDB :', err.message);
-      process.exit(1); // Arrêt de l’application en cas d’échec
+      process.exit(1); // Mieux vaut ne pas lancer l'app sans DB fonctionnelle
     });
 };

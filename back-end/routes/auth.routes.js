@@ -1,41 +1,48 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body, validationResult } = require('express-validator'); // Middleware de validation des entrées
 
 const router = express.Router();
 const authCtrl = require('../controllers/auth.controller');
 
-// Route POST /signup — inscription d’un utilisateur
+// -----------------------------------------------------------------------------
+// Route POST /signup — Inscription d’un nouvel utilisateur
+// -----------------------------------------------------------------------------
 router.post(
   '/signup',
   [
-    // Validation : email valide requis
+    // Validation : champ 'email' requis et bien formaté
     body('email')
       .isEmail()
       .withMessage('Email invalide'),
-    
-    // Validation : mot de passe de minimum 6 caractères
+
+    // Validation : champ 'password' d’au moins 6 caractères
     body('password')
       .isLength({ min: 6 })
       .withMessage('Le mot de passe doit comporter au moins 6 caractères'),
   ],
-  // Middleware de traitement des erreurs de validation
+  // Middleware de validation : capture et renvoie les erreurs de validation
   (req, res, next) => {
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
-      // Si erreurs, on les retourne au client
+      // Si des erreurs sont présentes, renvoie un tableau des erreurs
       return res.status(400).json({ errors: errors.array() });
     }
+
+    // Si tout est valide, on passe au contrôleur
     next();
   },
-  // Appel au contrôleur
+  // Contrôleur : création de l’utilisateur en base
   authCtrl.signup
 );
 
-// Route POST /login — connexion utilisateur
+// -----------------------------------------------------------------------------
+// Route POST /login — Connexion d’un utilisateur existant
+// -----------------------------------------------------------------------------
 router.post(
   '/login',
   [
-    // Validation : email obligatoire et bien formaté
+    // Validation : email bien formé requis
     body('email')
       .isEmail()
       .withMessage('Email invalide'),
@@ -45,16 +52,17 @@ router.post(
       .notEmpty()
       .withMessage('Le mot de passe est requis'),
   ],
-  // Middleware de gestion des erreurs de validation
+  // Middleware de validation des champs d’entrée
   (req, res, next) => {
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
-      // En cas d’erreurs, retour d’un tableau des erreurs
       return res.status(400).json({ errors: errors.array() });
     }
-    next();
+
+    next(); // Passage au contrôleur si validation OK
   },
-  // Appel au contrôleur
+  // Contrôleur : vérifie les identifiants et génère un token
   authCtrl.login
 );
 

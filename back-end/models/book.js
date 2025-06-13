@@ -1,39 +1,39 @@
 const mongoose = require('mongoose');
 
-// -------------------------------------------
-// Sous-schéma : notation individuelle d’un livre
-// -------------------------------------------
+// -----------------------------------------------------------------------------
+// Sous-schéma : représentation d’une notation individuelle associée à un livre
+// -----------------------------------------------------------------------------
 const ratingSchema = mongoose.Schema(
   {
     userId: {
       type: String,
-      required: true, // identifiant de l'utilisateur notant le livre
+      required: true, // ID de l’utilisateur ayant donné une note
     },
     grade: {
       type: Number,
       required: true,
-      min: [0, 'Note minimale = 0'],
-      max: [5, 'Note maximale = 5'],
+      min: [0, 'Note minimale = 0'], // Empêche des valeurs inférieures à 0
+      max: [5, 'Note maximale = 5'], // Empêche des valeurs supérieures à 5
     },
   },
   {
-    timestamps: true, // createdAt et updatedAt pour chaque note (utile pour audit ou tri)
+    timestamps: true, // Ajoute automatiquement createdAt et updatedAt pour chaque note
   }
 );
 
-// -------------------------------------------
-// Schéma principal : modèle de livre
-// -------------------------------------------
+// -----------------------------------------------------------------------------
+// Schéma principal : structure d’un document "Livre" dans MongoDB
+// -----------------------------------------------------------------------------
 const bookSchema = mongoose.Schema(
   {
     userId: {
       type: String,
-      required: true, // identifiant de l'utilisateur créateur du livre
+      required: true, // ID de l’utilisateur qui a créé le livre
     },
     title: {
       type: String,
       required: true,
-      trim: true, // supprime les espaces inutiles autour du titre
+      trim: true, // Supprime les espaces en début/fin (meilleure cohérence)
     },
     author: {
       type: String,
@@ -42,33 +42,30 @@ const bookSchema = mongoose.Schema(
     },
     imageUrl: {
       type: String,
-      required: true, // URL publique du fichier image
+      required: true, // Lien absolu vers l’image hébergée sur le serveur
     },
     year: {
       type: Number,
       required: true,
-      min: 0, // empêche les années négatives
+      min: 0, // Évite les dates de publication invalides (ex : années négatives)
     },
     genre: {
       type: String,
-      required: true,
+      required: true, // Catégorie ou style littéraire du livre
     },
-    ratings: [ratingSchema], // tableau de notations
+    ratings: [ratingSchema], // Tableau de notations liées au livre
     averageRating: {
       type: Number,
       required: true,
       min: 0,
       max: 5,
-      default: 0, // note moyenne initiale
+      default: 0, // Valeur par défaut si aucune note n’a encore été attribuée
     },
   },
   {
-    timestamps: true, // pour les livres : date de création / modification
+    timestamps: true, // Ajoute createdAt et updatedAt pour le suivi du livre
   }
 );
 
-// Plugin de validation d’unicité (décommenter si un champ unique est ajouté)
-// const uniqueValidator = require('mongoose-unique-validator');
-// bookSchema.plugin(uniqueValidator);
-
+// Exportation du modèle Mongoose "Book"
 module.exports = mongoose.model('Book', bookSchema);

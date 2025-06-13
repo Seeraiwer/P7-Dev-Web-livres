@@ -1,7 +1,9 @@
 const multer = require('multer');
 const path = require('path');
 
-// Définition des types MIME autorisés pour l'upload d'image
+// -----------------------------------------------------------------------------
+// Définition des types MIME autorisés pour l’upload d’images
+// -----------------------------------------------------------------------------
 const MIME_TYPES = {
   'image/jpg': 'jpg',
   'image/jpeg': 'jpg',
@@ -9,49 +11,62 @@ const MIME_TYPES = {
   'image/webp': 'webp',
 };
 
-// Configuration du stockage avec multer
+// -----------------------------------------------------------------------------
+// Configuration du stockage disque avec multer
+// -----------------------------------------------------------------------------
 const storage = multer.diskStorage({
-  // Répertoire de destination des fichiers uploadés
+  // Dossier de destination des fichiers uploadés
   destination: (req, file, callback) => {
-    callback(null, 'images'); // Les fichiers seront stockés dans le dossier 'images'
+    callback(null, 'images'); // Tous les fichiers sont stockés dans le dossier /images
   },
 
-  // Nom du fichier généré
+  // Nom du fichier à enregistrer
   filename: (req, file, callback) => {
-    // Nettoyage du nom original pour éviter les espaces et extensions multiples
-const name = file.originalname
-  .split(' ')
-  .join('_')
-  .normalize('NFD') // décompose les lettres accentuées
-  .replace(/[\u0300-\u036f]/g, '') // supprime les diacritiques
-  .replace(/[^a-zA-Z0-9_-]/g, ''); // garde uniquement les caractères sûrs
+    // Nettoyage du nom original :
+    // - remplace les espaces par des underscores
+    // - supprime les accents
+    // - retire les caractères spéciaux non sûrs
+    const name = file.originalname
+      .split(' ')
+      .join('_')
+      .normalize('NFD')                       // Décomposition des accents (é => e + ́)
+      .replace(/[\u0300-\u036f]/g, '')        // Suppression des diacritiques
+      .replace(/[^a-zA-Z0-9_-]/g, '');        // Garde uniquement lettres, chiffres, _ et -
 
-const extension = MIME_TYPES[file.mimetype];
-    
-    // Génération d’un nom unique avec horodatage
+    // Récupère l’extension à partir du type MIME
+    const extension = MIME_TYPES[file.mimetype];
+
+    // Génère un nom de fichier unique avec un timestamp
     const finalName = `${name}_${Date.now()}.${extension}`;
     callback(null, finalName);
   },
 });
 
-// Filtrage des fichiers : n'accepte que les types MIME déclarés
+// -----------------------------------------------------------------------------
+// Filtrage des fichiers par leur type MIME (pour éviter les fichiers malicieux)
+// -----------------------------------------------------------------------------
 const fileFilter = (req, file, callback) => {
   if (MIME_TYPES[file.mimetype]) {
-    callback(null, true); // Fichier accepté
+    callback(null, true); // Fichier autorisé
   } else {
-    // Ajout d'une erreur personnalisée accessible dans la route
+    // On ajoute un indicateur d’erreur personnalisé pour l’exploiter dans les routes
     req.fileValidationError = 'Format de fichier non autorisé';
-    callback(null, false); // Fichier rejeté
+    callback(null, false); // Fichier refusé silencieusement
   }
 };
 
-// Middleware complet multer avec taille limite et filtrage
+// -----------------------------------------------------------------------------
+// Configuration complète du middleware multer
+// - Stockage : disque local
+// - Taille max : 10 Mo
+// - Type MIME : image uniquement
+// -----------------------------------------------------------------------------
 const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // Limite à 10 Mo
+    fileSize: 10 * 1024 * 1024, // Limite de taille à 10 Mo par fichier
   },
   fileFilter,
-}).single('image'); // Attend un champ nommé 'image'
+}).single('image'); // Le champ attendu dans la requête multipart/form-data est "image"
 
 module.exports = upload;

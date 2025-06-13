@@ -1,22 +1,21 @@
 const express = require('express');
 const router = express.Router();
 
-const auth = require('../middlewares/auth'); // Middleware d'authentification
-const multer = require('../middlewares/multer-config'); // Gestion des fichiers uploadés
-const optimizeImage = require('../middlewares/optimizeImage'); // Compression d’image
-const bookCtrl = require('../controllers/book.controller'); // Logique métier des livres
-const Book = require('../models/book'); // Modèle Mongoose pour accéder à la base
+const auth = require('../middlewares/auth'); // Vérifie la validité du token JWT
+const multer = require('../middlewares/multer-config'); // Gestion des fichiers images uploadés (via Multer)
+const optimizeImage = require('../middlewares/optimizeImage'); // Compression et redimensionnement des images via Sharp
+const bookCtrl = require('../controllers/book.controller'); // Logique métier associée aux livres
+const Book = require('../models/book'); // Modèle Mongoose pour la collection "Book"
 
-/**
- * Middleware pour vérifier que l'utilisateur est bien le propriétaire du livre.
- * Utilisé avant les opérations sensibles (modification, suppression).
- */
+// -----------------------------------------------------------------------------
+// Middleware custom : vérifie que l’utilisateur connecté est le propriétaire du livre
+// -----------------------------------------------------------------------------
+// Ce middleware protège les routes sensibles : modification et suppression
 const checkOwnership = (req, res, next) => {
   const bookId = req.params.id;
 
   Book.findById(bookId)
     .then((book) => {
-      // Vérifie que le livre appartient bien à l'utilisateur connecté
       if (!book) {
         return res.status(404).json({ error: 'Livre introuvable' });
       }
@@ -25,66 +24,70 @@ const checkOwnership = (req, res, next) => {
           error: "Accès interdit : vous n'êtes pas le propriétaire de ce livre",
         });
       }
-      next();
+      next(); // L'utilisateur est bien le propriétaire → on continue
     })
     .catch((error) => res.status(500).json({ error }));
 };
 
 //
-// ROUTES PUBLIQUES (aucune authentification requise)
+// ----------------------------
+// ROUTES PUBLIQUES (accès libre)
+// ----------------------------
 //
 
-// Récupère tous les livres
+// GET /api/books — Récupère tous les livres
 router.get('/', bookCtrl.getAllBooks);
 
-// Récupère les livres les mieux notés
+// GET /api/books/bestrating — Récupère les 10 livres les mieux notés
 router.get('/bestrating', bookCtrl.getBestRatedBooks);
 
-// Récupère un livre spécifique par son ID
+// GET /api/books/:id — Récupère un livre par son identifiant
 router.get('/:id', bookCtrl.getOneBook);
 
 //
+// ----------------------------
 // ROUTES PROTÉGÉES (authentification requise)
+// ----------------------------
 //
 
-// Création d’un livre avec upload + optimisation de l’image
+// POST /api/books — Création d’un nouveau livre avec image
 router.post(
   '/',
-  auth,
-  multer,
-  // Vérifie si le fichier est invalide (bloqué par Multer)
+  auth,                // Vérifie l’authentification JWT
+  multer,              // Gère l’upload du fichier image
   (req, res, next) => {
+    // Vérifie si Multer a rejeté un fichier invalide (ex : mauvais format)
     if (req.fileValidationError) {
       return res.status(400).json({ error: req.fileValidationError });
     }
     next();
   },
-  optimizeImage, // Réduction de taille avec Sharp
-  bookCtrl.createBook
+  optimizeImage,       // Redimensionne et compresse l’image avec Sharp
+  bookCtrl.createBook  // Logique de création (enregistrement BDD)
 );
 
-// Modification d’un livre existant (propriétaire uniquement)
+// PUT /api/books/:id — Modification d’un livre (avec option image)
 router.put(
   '/:id',
-  auth,
-  multer,
-  optimizeImage,
-  checkOwnership, // Seul le propriétaire peut modifier
-  bookCtrl.updateBook
+  auth,                // Vérifie l’identité du demandeur
+  multer,              // Gère l’upload d’une nouvelle image (si fournie)
+  optimizeImage,       // Optimisation de la nouvelle image
+  checkOwnership,      // Vérifie que l’utilisateur est le propriétaire du livre
+  bookCtrl.updateBook  // Met à jour les champs du livre
 );
 
-// Suppression d’un livre (propriétaire uniquement)
+// DELETE /api/books/:id — Suppression d’un livre
 router.delete(
   '/:id',
-  auth,
-  checkOwnership, // Vérifie la propriété du livre
+  auth,                // Authentification requise
+  checkOwnership,      // Seul le créateur peut supprimer son livre
   bookCtrl.deleteBook
 );
 
-// Notation d’un livre
+// POST /api/books/:id/rating — Ajout d’une note à un livre
 router.post(
   '/:id/rating',
-  auth,
+  auth,                // Seul un utilisateur connecté peut noter un livre
   bookCtrl.rateBook
 );
 

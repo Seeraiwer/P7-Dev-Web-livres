@@ -1,28 +1,32 @@
 const jwt = require('jsonwebtoken');
 
+// -----------------------------------------------------------------------------
+// Middleware d’authentification : vérifie le token JWT dans l’en-tête Authorization
+// -----------------------------------------------------------------------------
 module.exports = (req, res, next) => {
   try {
-    // Récupération de l'en-tête Authorization de la requête
+    // Récupération de l'en-tête Authorization
     const authorization = req.headers.authorization;
 
-    // Vérifie la présence et le format du header (doit commencer par "Bearer ")
+    // Vérifie que l’en-tête existe et commence bien par "Bearer "
     if (!authorization || !authorization.startsWith('Bearer ')) {
       return res.status(400).json({ error: 'Token mal formé' });
     }
 
-    // Extraction du token JWT depuis l'en-tête
-    const token = authorization.split(' ')[1]; // Extrait le token après "Bearer"
+    // Extraction du token à partir de l’en-tête : "Bearer <token>"
+    const token = authorization.split(' ')[1];
 
-    // Vérifie et décode le token à l’aide de la clé secrète
+    // Vérification et décodage du token à l’aide de la clé secrète définie dans .env
     const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
 
-    // Ajoute l’ID utilisateur décodé dans l’objet req pour l’utiliser dans les routes
+    // Injection de l’ID utilisateur décodé dans la requête (req.auth)
+    // Cela permet aux contrôleurs de vérifier l’identité du demandeur
     req.auth = { userId: decodedToken.userId };
 
-    // Passage au middleware ou contrôleur suivant
+    // Poursuite du traitement : le token est valide
     next();
   } catch (error) {
-    // En cas d’erreur : token invalide, expiré, inexistant, etc.
+    // Erreurs possibles : token expiré, signature invalide, champ manquant...
     console.error("Erreur d'authentification :", error.message);
     res.status(401).json({ error: 'Requête non authentifiée' });
   }

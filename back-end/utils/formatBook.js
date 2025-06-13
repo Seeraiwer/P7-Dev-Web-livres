@@ -1,47 +1,53 @@
-// Génère un tableau d'étoiles pour l'affichage visuel basé sur la note moyenne
+// -----------------------------------------------------------------------------
+// Fonction utilitaire : génère un tableau d’étoiles à partir d’une note moyenne
+// Utilisé pour le rendu visuel (ex. : notation en étoiles dans le frontend)
+// -----------------------------------------------------------------------------
 const generateStars = (averageRating, bookId) => {
-  const full = Math.floor(averageRating); // Nombre d’étoiles pleines
-  const empty = 5 - full;                 // Complément pour arriver à 5
+  const full = Math.floor(averageRating); // Nombre d’étoiles pleines (entier inférieur)
+  const empty = 5 - full;                 // Nombre d’étoiles vides à compléter jusqu’à 5
 
-  // Construit les étoiles pleines et vides avec un identifiant unique
+  // Construit un tableau contenant des objets représentant chaque étoile
   return [
     ...Array.from({ length: full }, (_, i) => ({
       type: 'full',
-      id: `${bookId}-full-${i}`,
+      id: `${bookId}-full-${i}`, // ID unique basé sur le livre et l’index
     })),
     ...Array.from({ length: empty }, (_, i) => ({
       type: 'empty',
-      id: `${bookId}-empty-${i}`,
+      id: `${bookId}-empty-${i}`, // ID unique pour les étoiles vides
     })),
   ];
 };
 
-// Fonction de formatage d'un objet Book pour le frontend
+// -----------------------------------------------------------------------------
+// Fonction principale : formatBook()
+// Convertit un document MongoDB "Book" en un objet prêt à être envoyé au frontend
+// -----------------------------------------------------------------------------
 module.exports = (book) => {
-  // Assure la conversion en objet JS pur, même si on a un document Mongoose
+  // Conversion en objet JS brut si on reçoit un document Mongoose
   const bookObj = book.toObject?.() || book;
 
-  // Génère un identifiant de secours si l'ID est absent
+  // Génère un identifiant unique de secours si l’ID n’est pas disponible
   const bookId =
     bookObj._id?.toString?.() || bookObj.id || `fallback-${Date.now()}-${Math.random()}`;
 
   return {
-    _id: bookObj._id,               // Identifiant MongoDB
-    title: bookObj.title,
-    author: bookObj.author,
-    imageUrl: bookObj.imageUrl,
-    year: bookObj.year,
-    genre: bookObj.genre,
-    averageRating: bookObj.averageRating,
-    
-    // Liste des notations, sans les identifiants internes
+    _id: bookObj._id,             // Identifiant MongoDB
+    title: bookObj.title,         // Titre du livre
+    author: bookObj.author,       // Nom de l’auteur
+    imageUrl: bookObj.imageUrl,   // URL de l’image de couverture
+    year: bookObj.year,           // Année de publication
+    genre: bookObj.genre,         // Genre littéraire
+    averageRating: bookObj.averageRating, // Note moyenne calculée
+
+    // Nettoyage du tableau de notations : suppression de l’attribut interne _id
     ratings: (bookObj.ratings || []).map(({ _id, ...rest }) => ({
       ...rest,
     })),
 
-    // Étoiles calculées dynamiquement pour affichage frontend
+    // Génération du tableau d’étoiles pour l’affichage graphique
     stars: generateStars(bookObj.averageRating, bookId),
 
-    userId: bookObj.userId, // Créateur du livre
+    userId: bookObj.userId, // Référence au créateur du livre
   };
 };
