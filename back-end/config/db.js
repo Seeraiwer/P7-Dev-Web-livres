@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
 // Chargement des variables d’environnement depuis le fichier .env
-// (doit contenir au minimum la variable MONGODB_URI)
 // -----------------------------------------------------------------------------
 require('dotenv').config();
 
