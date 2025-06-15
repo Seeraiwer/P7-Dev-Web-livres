@@ -29,6 +29,6 @@ exports.connect = () => {
     .catch((err) => {
       // Si échec de la connexion : log explicite + arrêt complet
       console.error('Échec de la connexion MongoDB :', err.message);
-      process.exit(1); // Mieux vaut ne pas lancer l'app sans DB fonctionnelle
+      process.exit(1);
     });
 };
