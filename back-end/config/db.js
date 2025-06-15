@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 // Fonction de connexion à MongoDB, à appeler au lancement de l’application
 // -----------------------------------------------------------------------------
 exports.connect = () => {
-  const uri = process.env.MONGODB_URI; // URI MongoDB définie dans .env (ex : mongodb+srv://...)
+  const uri = process.env.MONGODB_URI; // URI MongoDB définie dans .env
 
   // Vérifie que l’URI est bien définie avant de tenter une connexion
   if (!uri) {
