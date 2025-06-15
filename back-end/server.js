@@ -10,7 +10,7 @@ require('dotenv').config();
 // Fonction utilitaire permettant de normaliser le port (gère chaînes et entiers)
 const normalizePort = (val) => {
   const port = parseInt(val, 10); // Tente de convertir la valeur en entier
-  if (isNaN(port)) return val;    // Si ce n'est pas un nombre, retourne la valeur brute (ex : pipe nommé)
+  if (isNaN(port)) return val;    // Si ce n'est pas un nombre, retourne la valeur brute
   if (port >= 0) return port;     // Si c'est un entier positif, retourne-le
   return false;                   // Sinon, retourne false pour signaler une erreur
 };
