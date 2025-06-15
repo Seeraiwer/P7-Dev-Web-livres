@@ -1,5 +1,5 @@
 const Book = require('../models/book'); // Modèle Mongoose pour les livres
-const fs = require('fs'); // Module Node.js pour manipuler les fichiers (ex : suppression d'images)
+const fs = require('fs'); // Module Node.js pour manipuler les fichiers
 const path = require('path'); // Utilitaire pour manipuler les chemins de fichiers
 const formatBook = require('../utils/formatBook'); // Fonction utilitaire pour uniformiser le format des réponses
 
