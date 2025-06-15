@@ -33,7 +33,7 @@ const bookSchema = mongoose.Schema(
     title: {
       type: String,
       required: true,
-      trim: true, // Supprime les espaces en début/fin (meilleure cohérence)
+      trim: true, // Supprime les espaces en début/fin
     },
     author: {
       type: String,
@@ -47,7 +47,7 @@ const bookSchema = mongoose.Schema(
     year: {
       type: Number,
       required: true,
-      min: 0, // Évite les dates de publication invalides (ex : années négatives)
+      min: 0, // Évite les dates de publication invalides
     },
     genre: {
       type: String,
