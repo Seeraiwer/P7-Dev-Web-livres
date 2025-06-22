@@ -19,7 +19,6 @@ const userSchema = mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Le mot de passe est obligatoire'], // Champ obligatoire
-    // La complexité du mot de passe (longueur, majuscules, etc.) est à valider côté contrôleur ou frontend
   },
 });
 
