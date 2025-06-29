@@ -160,7 +160,7 @@ exports.rateBook = async (req, res) => {
 
     // Met à jour la moyenne
     const total = book.ratings.reduce((sum, r) => sum + r.grade, 0);
-    book.averageRating = total / book.ratings.length;
+    book.averageRating = parseFloat((total / book.ratings.length).toFixed(2));
 
     const updatedBook = await book.save();
     res.status(200).json(formatBook(updatedBook));
