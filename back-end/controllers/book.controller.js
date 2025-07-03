@@ -138,9 +138,9 @@ exports.deleteBook = async (req, res) => {
 // Ajoute une nouvelle note d’un utilisateur à un livre
 // -----------------------------------------------------------------------------
 exports.rateBook = async (req, res) => {
-  const { userId, rating } = req.body;
+  const { rating } = req.body;
+  const userId = req.auth.userId;
 
-  // Vérification de la validité de la note
   if (rating < 0 || rating > 5) {
     return res.status(400).json({ error: 'Note invalide (0 à 5 requis)' });
   }
@@ -149,16 +149,13 @@ exports.rateBook = async (req, res) => {
     const book = await Book.findById(req.params.id);
     if (!book) return res.status(404).json({ error: 'Livre non trouvé' });
 
-    // Vérifie si l’utilisateur a déjà noté le livre
     const alreadyRated = book.ratings.find(r => r.userId === userId);
     if (alreadyRated) {
       return res.status(400).json({ error: 'L’utilisateur a déjà noté ce livre' });
     }
 
-    // Ajoute la nouvelle note
     book.ratings.push({ userId, grade: rating });
 
-    // Met à jour la moyenne
     const total = book.ratings.reduce((sum, r) => sum + r.grade, 0);
     book.averageRating = parseFloat((total / book.ratings.length).toFixed(2));
 
@@ -169,6 +166,7 @@ exports.rateBook = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // -----------------------------------------------------------------------------
 // GET /api/books/bestrating
