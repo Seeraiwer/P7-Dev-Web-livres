@@ -7,7 +7,7 @@ const app = require('./app');
 // Chargement des variables d'environnement depuis un fichier .env
 require('dotenv').config();
 
-const db = require('./db');
+const db = require('./config/db.js');
 db.connect();   
 
 // Fonction utilitaire permettant de normaliser le port (gère chaînes et entiers)
